@@ -38,27 +38,27 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
             $config = new Navigation('OC Einstellungen');
             $config->setURL(PluginEngine::getURL('opencast/admin/config'));
             $main->addSubNavigation('oc-config', $config);
+            
+            
+            $endpoints = new Navigation('OC Endpoints');
+            $endpoints->setURL(PluginEngine::getURL('opencast/admin/endpoints'));
+            $main->addSubNavigation('oc-endpoints', $endpoints);
+            
 
             $resources = new Navigation('OC Ressourcen');
             $resources->setURL(PluginEngine::getURL('opencast/admin/resources'));
             $main->addSubNavigation('oc-resources', $resources);
-            
-            /*// Clienttest
-            $client = new Navigation('OC Client Status');
-            $client->setURL(PluginEngine::getURL('opencast/admin/client'));
-            $main->addSubNavigation('oc-client', $client);
-            */
-            
+
             Navigation::addItem('/start/opencast', $main);
             Navigation::addItem('/admin/config/oc-config', $config);
+            Navigation::addItem('/admin/config/oc-endpoints', $endpoints);
             Navigation::addItem('/admin/config/oc-resources', $resources);
-           // Navigation::addItem('/admin/config/oc-client', $client);
+
 
         }
-        
 
-        
-   
+
+
         $style_attributes = array(
             'rel'   => 'stylesheet',
             'href'  => $GLOBALS['CANONICAL_RELATIVE_PATH_STUDIP'] . $this->getPluginPath() . '/stylesheets/oc.css');
@@ -84,13 +84,13 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
                                             rtrim(PluginEngine::getURL($this, null, ''), '/'),
                                             null);
 
-        
+
         $dispatcher->plugin = $this;
 
         $dispatcher->dispatch($unconsumed_path);
-        
 
-                
+
+
     }
 
     /**
@@ -176,9 +176,11 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
         $overview = new Navigation('Aufzeichnungen');
         $overview->setURL(PluginEngine::getURL('opencast/course/index'));
 
-        $scheduler = new Navigation('Aufzeichnungen verwalten');
+        $scheduler = new Navigation('Aufzeichnungen planen');
         $scheduler->setURL(PluginEngine::getURL('opencast/course/scheduler'));
 
+        $manager = new Navigation('Aufzeichnungen verwalten');
+        $manager->setURL(PluginEngine::getURL('opencast/course/manage_episodes'));
         //$upload = new Navigation('Upload');
         //$upload->setURL(PluginEngine::getURL('opencast/course/upload'));
         $main->addSubNavigation('overview', $overview);
@@ -186,9 +188,10 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
         
         if ($GLOBALS['perm']->have_studip_perm('dozent', $course_id)) {
             // TODO: Add scheduler iff scheduling is allowed in current course
+            $main->addSubNavigation('manager', $manager);
             $main->addSubNavigation('scheduler', $scheduler);
             $main->addSubNavigation('config', $admin);
-          //  $main->addSubNavigation('upload', $upload);
+            // $main->addSubNavigation('upload', $upload);
 
         }
 

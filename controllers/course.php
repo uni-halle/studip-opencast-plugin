@@ -191,7 +191,12 @@ class CourseController extends StudipController
     
     function remove_series_action($course_id, $series_id)
     {
+        
+        $schedule_episodes = OCSeriesModel::getScheduledEpisodes($course_id);
+        
         OCSeriesModel::removeSeriesforCourse($course_id, $series_id);
+        
+        
         
         /*
         $series_client = SeriesClient::getInstance();
@@ -210,7 +215,7 @@ class CourseController extends StudipController
         $navigation = Navigation::getItem('/course/opencast');
         $navigation->setImage('../../'.$this->dispatcher->trails_root.'/images/oc-logo-black.png');
         
-        $this->set_title(_("Opencast Aufzeichnungen verwalten"));
+        $this->set_title(_("Opencast Aufzeichnungen planen"));
         
 
         $this->course_id = $_SESSION['SessionSeminar'];
@@ -223,9 +228,22 @@ class CourseController extends StudipController
         
         $workflow_client = WorkflowClient::getInstance();
         
+    }
+    
+    function manage_episodes_action(){
+        Navigation::activateItem('course/opencast/manager');
+        $navigation = Navigation::getItem('/course/opencast');
+        $navigation->setImage('../../'.$this->dispatcher->trails_root.'/images/oc-logo-black.png');
         
+        $this->set_title(_("Opencast Aufzeichnungen verwalten"));
         
+
+        $this->course_id = $_SESSION['SessionSeminar'];
+        
+        $this->search_client = SearchClient::getInstance();
+        $this->cseries = OCModel::getConnectedSeries($this->course_id);
         // lets get all episodes for the connected series
+        // TODO take care of the visibilities
         if (($cseries = OCSeriesModel::getConnectedSeries($this->course_id)) && !isset($this->flash['error'])) {
 
             $this->episode_ids = array();
@@ -234,11 +252,9 @@ class CourseController extends StudipController
             $this->search_client = SearchClient::getInstance();
                 foreach($cseries as $serie) {
                    // $instances = $workflow_client->getInstances($serie['identifier']);
-                    $this->episodes = $search_client->getEpisodes($serie['identifier']);
+                    $this->episodes = $this->search_client->getEpisodes($serie['identifier']);
                 }
         }
-
-
     }
 
 
@@ -315,11 +331,11 @@ class CourseController extends StudipController
         if($visible['visible'] == 'true'){
            OCModel::setVisibilityForEpisode($this->course_id, $episode_id, 'false');
            $this->flash['message'] = _("Episode wurde unsichtbar geschaltet");
-           $this->redirect(PluginEngine::getLink('opencast/course/scheduler'));
+           $this->redirect(PluginEngine::getLink('opencast/course/manage_episodes'));
         } else {
            OCModel::setVisibilityForEpisode($this->course_id, $episode_id, 'true');
            $this->flash['message'] = _("Episode wurde sichtbar geschaltet");
-           $this->redirect(PluginEngine::getLink('opencast/course/scheduler'));
+           $this->redirect(PluginEngine::getLink('opencast/course/manage_episodes'));
         }
     }
 
@@ -390,6 +406,63 @@ class CourseController extends StudipController
 
         $this->redirect(PluginEngine::getLink('opencast/course/upload'));
 
+    }
+    
+    function bulkschedule_action()
+    {
+        $course_id =  Request::get('cid');
+        $action = Request::get('action');
+
+        $dates = Request::getArray('dates');    
+        foreach($dates as $termin_id => $resource_id){
+            switch($action) {
+                case "create":
+                    $this->schedule($resource_id, $termin_id, $course_id);
+                    break;
+                case "update":
+                    $this->updateschedule($resource_id, $termin_id, $course_id);
+                    break;
+                case "delete":
+                    $this->unschedule($resource_id, $termin_id, $course_id);
+                    break;
+            }
+        }
+
+        $this->redirect(PluginEngine::getLink('opencast/course/scheduler'));
+    }
+    
+    static function schedule($resource_id, $termin_id, $course_id) {
+        $scheduled = OCModel::checkScheduledRecording($course_id, $resource_id, $termin_id);
+        if(!$scheduled) {
+            $scheduler_client = SchedulerClient::getInstance();
+
+            if($scheduler_client->scheduleEventForSeminar($course_id, $resource_id, $termin_id)) {
+                return true;
+            } else {
+                // TODO FEEDBACK
+            }
+        }
+    }
+    
+    static function updateschedule($resource_id, $termin_id, $course_id) {
+        $scheduled = OCModel::checkScheduledRecording($course_id, $resource_id, $termin_id);
+        if($scheduled){
+            $this->unschedule($resource_id, $termin_id, $course_id);
+        }
+        $this->schedule($resource_id, $termin_id, $course_id);
+    }
+    
+    static function unschedule($resource_id, $termin_id, $course_id) {
+        $scheduled = OCModel::checkScheduledRecording($course_id, $resource_id, $termin_id);
+        if($scheduled) {
+            $scheduler_client = SchedulerClient::getInstance();
+
+            if( $scheduler_client->deleteEventForSeminar($course_id, $resource_id, $termin_id)) {
+                return true;
+            } else {
+                // TODO FEEDBACK
+            }
+        }
     }
 
 

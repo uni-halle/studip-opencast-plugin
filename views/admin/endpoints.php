@@ -24,5 +24,10 @@
 <script language="JavaScript">
 OC.initAdmin();
 </script>
-<?= $this->render_partial("admin/_initial_config", array('info_url' => $info_url,
-                              'info_user' =>$info_user,'info_password' => $info_password)) ?>
+<!--
+<h3>Globale Opencast Matterhorn Einstellungen</h3>
+<span>
+  <?=_("Tragen Sie hier den Pfad zum Matterhorn Runtime Information REST-Endpoint ein.")?>
+</span> -->
+
+<?= $this->render_partial("admin/_endpointoverview", array('endpoints' => $endpoints)) ?>
