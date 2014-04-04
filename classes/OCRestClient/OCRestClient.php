@@ -44,12 +44,12 @@
             curl_setopt($this->ochandler, CURLOPT_HTTPHEADER, array("X-Requested-Auth: Digest"));
 
             //ssl
-            //curl_setopt($this->ochandler, CURLOPT_SSL_VERIFYPEER, false);
-            //curl_setopt($this->ochandler, CURLOPT_SSL_VERIFYHOST, false);
-            //curl_setopt($this->ochandler, CURLOPT_SSL_CIPHER_LIST, 'RC4-SHA');
+            curl_setopt($this->ochandler, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($this->ochandler, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($this->ochandler, CURLOPT_SSL_CIPHER_LIST, 'RC4-SHA');
 
             // debugging
-            //curl_setopt($this->ochandler, CURLOPT_VERBOSE, true);
+            curl_setopt($this->ochandler, CURLOPT_VERBOSE, true);
         }
 
         /**

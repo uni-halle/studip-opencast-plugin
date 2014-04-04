@@ -128,8 +128,13 @@ class CourseController extends StudipController
 
 
             if($count > 0) {
-                $this->embed = $this->search_client->getBaseURL() ."/engage/ui/embed.html?id=".$this->active_id;
-                $this->engage_player_url = 'http://' . $this->search_client->getBaseURL() ."/engage/ui/watch.html?id=".$this->active_id.'&studipuser='.$user->username;
+
+//joergsslhack
+//                $this->embed = $this->search_client->getBaseURL() ."/engage/ui/embed.html?id=".$this->active_id;
+//                $this->engage_player_url = 'http://' . $this->search_client->getBaseURL() ."/engage/ui/watch.html?id=".$this->active_id.'&studipuser='.$user->username;
+
+                $this->embed = 'engage.matterhorn.uni-halle.de:8081' ."/engage/ui/embed.html?id=".$this->active_id;
+                $this->engage_player_url = 'https://engage.matterhorn.uni-halle.de:8081' ."/engage/ui/watch.html?id=".$this->active_id.'&studipuser='.$user->username;
             }
         } catch (Exception $e) {
             $this->flash['error'] = $e->getMessage();
