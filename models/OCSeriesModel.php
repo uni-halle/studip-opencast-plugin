@@ -269,21 +269,17 @@ class OCSeriesModel {
         require_once 'lib/classes/Institute.class.php';
         $course = new Seminar($course_id);
         $name = $course->getName();
-        $license = "(c) " . date(Y) . " " . $GLOBALS['UNI_NAME_CLEAN'];
+        $license = "© " . gmdate(Y) . " " . $GLOBALS['UNI_NAME_CLEAN'];
         $rightsHolder = $GLOBALS['UNI_NAME_CLEAN'];
 
-
         $inst = Institute::find($course->institut_id);
-
-
-
 
         $publisher = $inst->name;
         $start = $course->getStartSemester();
         $end = $course->getEndSemesterVorlesEnde();
         $audience = "General Public";
         $instructors = $course->getMembers('dozent');
-        $instructor = array_pop($instructors);
+        $instructor = array_shift($instructors);
         $contributor = $GLOBALS['UNI_NAME_CLEAN'];
         $creator = $instructor['fullname'];
         $language = 'German';
@@ -303,7 +299,7 @@ class OCSeriesModel {
         $content = array();
 
         foreach ($data as $key => $val) {
-            $content[] = '<dcterms:' . $key . '>' . $val . '</dcterms:' . $key . '>';
+            $content[] = '<dcterms:' . $key . '><![CDATA[' . $val . ']]></dcterms:' . $key . '>';
         }
 
         $str = '<?xml version="1.0" encoding="UTF-8"?>'

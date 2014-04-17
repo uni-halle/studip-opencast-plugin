@@ -257,7 +257,7 @@ class OCModel
         $audience = "General Public";
 
         $instructors = $course->getMembers('dozent');
-        $instructor = array_pop($instructors);
+        $instructor = array_shift($instructors);
         $contributor = $instructor['fullname'];
         $creator = $inst_data['name'];
 
@@ -330,40 +330,30 @@ class OCModel
         $cas = self::checkResource($resource_id);
         $ca = $cas[0];
         $instructors = $course->getMembers('dozent');
-        $instructor = array_pop($instructors);
-
+       
+        $instructor = array_shift($instructors);
+         
         $inst_data = Institute::find($course->institut_id);
-            //$inst_data = $inst->getData();
-
-     
 
         $room = ResourceObject::Factory($resource_id);
 
         $start_time = $date->getStartTime();
-        $end_time = $date->getEndTime();
-        /*
-        $start = $start_time.'000';
-        $end = $end_time.'000';
-
-        $duration = $end - $start;
-        $duration = $duration;
+        $end_time = strtotime("-5 minutes ", intval($date->getEndTime()));
       
-        $duration_in_hours = $duration;
-        */
-
         $contributor = $inst_data['name'];
         $creator = $instructor['fullname'];
         $description = $issue->description;
         $device = $ca['capture_agent'];
-        //$duration = $duration_in_hours;
-        //$endDate = $end;
+
         $language = "German";
-        $licence = "General PublicS";
+        $licence = "General Public";
         $resources  = 'vga, audio';
         $seriesId = $serie['series_id'];
 
        if(!$issue->title) {
-           $title = sprintf(_('Aufzeichnung vom %s'), $date->getDatesExport());
+           $course = new Seminar($course_id);
+           $name = $course->getName();
+           $title = $name . ' ' . sprintf(_('(%s)'), $date->getDatesExport());
        } else $title = $issue->title;
 
 
@@ -373,15 +363,15 @@ class OCModel
 
         $dublincore = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
                             <dublincore xmlns="http://www.opencastproject.org/xsd/1.0/dublincore/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                                <dcterms:creator>' . $creator . '</dcterms:creator>
-                                <dcterms:contributor>' . $contributor . '</dcterms:contributor>
+                                <dcterms:creator><![CDATA[' . $creator . ']]></dcterms:creator>
+                                <dcterms:contributor><![CDATA[' . $contributor . ']]></dcterms:contributor>
                                 <dcterms:created xsi:type="dcterms:W3CDTF">' . self::getDCTime($start_time) . '</dcterms:created>
                                 <dcterms:temporal xsi:type="dcterms:Period">start='. self::getDCTime($start_time) .'; end='. self::getDCTime($end_time) .'; scheme=W3C-DTF;</dcterms:temporal>
-                                <dcterms:description>' . $description . '</dcterms:description>
-                                <dcterms:subject>' . $abstract . '</dcterms:subject>
-                                <dcterms:language>' . $language . '</dcterms:language>
+                                <dcterms:description><![CDATA[' . $description . ']]></dcterms:description>
+                                <dcterms:subject><![CDATA[' . $abstract . ']]></dcterms:subject>
+                                <dcterms:language><![CDATA[' . $language . ']]></dcterms:language>
                                 <dcterms:spatial>' . $device . '</dcterms:spatial>
-                                <dcterms:title>' . $title . '</dcterms:title>
+                                <dcterms:title><![CDATA[' . $title . ']]></dcterms:title>
                                 <dcterms:isPartOf>'. $seriesId . '</dcterms:isPartOf>
                             </dublincore>';
 
@@ -420,7 +410,7 @@ class OCModel
     }
 
     static function getDCTime($timestamp) {
-        return date("Y-m-d", $timestamp).'T'.date('H:i:s', $timestamp).'Z';
+        return gmdate("Y-m-d", $timestamp).'T'.gmdate('H:i:s', $timestamp).'Z';
     }
   
     static function retrieveRESTservices($components) {

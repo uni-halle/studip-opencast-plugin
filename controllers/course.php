@@ -128,8 +128,8 @@ class CourseController extends StudipController
 
 
             if($count > 0) {
-                $this->embed = $this->search_client->getBaseURL() ."/engage/ui/embed.html?id=".$this->active_id;
-                $this->engage_player_url = 'http://' . $this->search_client->getBaseURL() ."/engage/ui/watch.html?id=".$this->active_id.'&studipuser='.$user->username;
+                $engage_url =  parse_url($this->search_client->getBaseURL());
+                $this->embed = $engage_url['host'] ."/engage/ui/embed.html?id=".$this->active_id;
             }
         } catch (Exception $e) {
             $this->flash['error'] = $e->getMessage();
@@ -149,29 +149,9 @@ class CourseController extends StudipController
         $this->course_id = $_SESSION['SessionSeminar'];
         $this->set_title(_("Opencast Konfiguration"));
         
-        
-        $this->connectedSeries = OCSeriesModel::getConnectedSeries($this->course_id);
+  
         $this->connectedSeries = OCSeriesModel::getConnectedSeries($this->course_id);
         $this->unconnectedSeries = OCSeriesModel::getUnconnectedSeries($this->course_id, true);
-        
-        /*
-        
-        try {
-    
-           //  $this->connectedSeries = OCSeriesModel::getConnectedSeries($this->course_id);
-            
-        //    $this->connectedSeries = OCSeriesModel::getConnectedSeries($this->course_id);
-      
-            //$this->unconnectedSeries = OCSeriesModel::getUnconnectedSeries($this->course_id, true);
-            
-           // $allseries = OCSeriesModel::getAllSeries();
-                    //$this->search_client = SearchClient::getInstance();
-    
-            
-        } catch (Exception $e) {
-            $this->flash['error'] = $e->getMessage();
-            $this->render_action('_error');
-        }*/
 
     }
     
@@ -250,10 +230,10 @@ class CourseController extends StudipController
             $ids = array();
             $count = 0;
             $this->search_client = SearchClient::getInstance();
-                foreach($cseries as $serie) {
-                   // $instances = $workflow_client->getInstances($serie['identifier']);
-                    $this->episodes = $this->search_client->getEpisodes($serie['identifier']);
-                }
+            foreach($cseries as $serie) {
+                // $instances = $workflow_client->getInstances($serie['identifier']);
+                $this->episodes = $this->search_client->getEpisodes($serie['identifier']);
+            }
         }
     }
 
@@ -417,13 +397,13 @@ class CourseController extends StudipController
         foreach($dates as $termin_id => $resource_id){
             switch($action) {
                 case "create":
-                    $this->schedule($resource_id, $termin_id, $course_id);
+                    self::schedule($resource_id, $termin_id, $course_id);
                     break;
                 case "update":
-                    $this->updateschedule($resource_id, $termin_id, $course_id);
+                    self::updateschedule($resource_id, $termin_id, $course_id);
                     break;
                 case "delete":
-                    $this->unschedule($resource_id, $termin_id, $course_id);
+                    self::unschedule($resource_id, $termin_id, $course_id);
                     break;
             }
         }
@@ -445,11 +425,14 @@ class CourseController extends StudipController
     }
     
     static function updateschedule($resource_id, $termin_id, $course_id) {
+
         $scheduled = OCModel::checkScheduledRecording($course_id, $resource_id, $termin_id);
         if($scheduled){
-            $this->unschedule($resource_id, $termin_id, $course_id);
-        }
-        $this->schedule($resource_id, $termin_id, $course_id);
+            $scheduler_client = SchedulerClient::getInstance();
+            $scheduler_client->updateEventForSeminar($course_id, $resource_id, $termin_id, $scheduled['event_id']);
+        } else {
+            self::schedule($resource_id, $termin_id, $course_id);
+        }  
     }
     
     static function unschedule($resource_id, $termin_id, $course_id) {
