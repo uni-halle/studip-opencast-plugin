@@ -10,7 +10,7 @@
 <? if(!(empty($episode_ids))) : ?>
 <? $active = $episode_ids[$active_id]?>
     <div class="oce_playercontainer">
-        <iframe src="https://<?=$embed?>&hideControls=false" style="border:0px #FFFFFF none;" name="Opencast Matterhorn - Media Player" scrolling="no" frameborder="0" marginheight="0px" marginwidth="0px" width="100%" height="770px" style="position=relative; top:-140px;" ></iframe><br>
+        <iframe src="https://<?=$embed?>&hideControls=false" style="border:0px #FFFFFF none; position=relative; top:-140px;" name="Opencast Matterhorn - Media Player" scrolling="no" frameborder="0" marginheight="0px" marginwidth="0px" width="100%" height="770px" ></iframe><br>
         <div class="oce_emetadata">
             <h2 class="oce_title"><?= mb_convert_encoding($active['title'], 'ISO-8859-1', 'UTF-8')?></h2>
             <ul class="oce_contetlist">
@@ -19,12 +19,12 @@
                 <li><?=_('Beschreibung : ')?> <?=$active['description'] ? mb_convert_encoding($active['description'], 'ISO-8859-1', 'UTF-8')  : 'Keine Beschreibung vorhanden';?></li>
             </ul>
             <div class="ocplayerlink">
-                <div style="text-align:left; font-style:italic;">Weitere Optionen:</div>
-                <div class="button-group">
+               <!-- <div style="text-align:left; font-style:italic;">Weitere Optionen:</div>--!>
+	<div class="button-group"><!--
                 <?= Studip\LinkButton::create(_('Erweiterter Player'), URLHelper::getURL('http://'.$engage_player_url), array('target'=> '_blank','class' => 'extern')) ?>
                 <?= Studip\LinkButton::create(_('Download ReferentIn'), URLHelper::getURL($active['presenter_download']), array('target'=> '_blank', 'class' => 'download presenter')) ?>
                 <?= Studip\LinkButton::create(_('Download Bildschirm '), URLHelper::getURL($active['presentation_download']), array('target'=> '_blank', 'class' => 'download presentation')) ?>
-                <?= Studip\LinkButton::create(_('Download Audio'), URLHelper::getURL($active['audio_download']), array('target'=> '_blank', 'class' => 'download audio')) ?>
+                <?= Studip\LinkButton::create(_('Download Audio'), URLHelper::getURL($active['audio_download']), array('target'=> '_blank', 'class' => 'download audio')) ?>--!>
             </div>
             </div>
         </div>
