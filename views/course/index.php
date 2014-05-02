@@ -10,7 +10,7 @@
 <? if(!(empty($episode_ids))) : ?>
 <? $active = $episode_ids[$active_id]?>
     <div class="oce_playercontainer">
-        <iframe src="https://<?=$embed?>&hideControls=false" style="border:0px #FFFFFF none; position=relative; top:-140px;" name="Opencast Matterhorn - Media Player" scrolling="no" frameborder="0" marginheight="0px" marginwidth="0px" width="100%" height="770px" ></iframe><br>
+        <iframe src="https://<?=$embed?>&hideControls=false" style="border:0px #FFFFFF none;" name="Opencast Matterhorn - Media Player" scrolling="no" frameborder="0" marginheight="0px" marginwidth="0px" width="100%" height="960px" ></iframe><br>
         <div class="oce_emetadata">
             <h2 class="oce_title"><?= mb_convert_encoding($active['title'], 'ISO-8859-1', 'UTF-8')?></h2>
             <ul class="oce_contetlist">
