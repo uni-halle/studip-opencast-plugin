@@ -184,7 +184,7 @@ class OpenCastBase extends StudipPlugin implements SystemPlugin, StandardPlugin
         $main->addSubNavigation('overview', $overview);
 
         
-        if ($GLOBALS['perm']->have_studip_perm('admin', $course_id)) {
+        if ($GLOBALS['perm']->have_studip_perm('dozent', $course_id)) {
             // TODO: Add scheduler iff scheduling is allowed in current course
             $main->addSubNavigation('manager', $manager);
             $series_metadata = OCSeriesModel::getConnectedSeriesDB($course_id);
