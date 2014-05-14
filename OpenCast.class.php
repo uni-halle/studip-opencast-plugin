@@ -10,13 +10,17 @@
  */
 
 require_once 'vendor/trails/trails.php';
+require_once 'models/OCModel.php';
 require_once 'models/OCSeriesModel.php';
+require_once 'classes/OCRestClient/SearchClient.php';
+require_once 'classes/OCRestClient/SeriesClient.php';
+
 
 define('OC_UPLOAD_CHUNK_SIZE', '1000000');
 define('OC_CLEAN_SESSION_AFTER_DAYS', '1');
 
 
-class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
+class OpenCastBase extends StudipPlugin implements SystemPlugin, StandardPlugin
 {
     /**
      * Initialize a new instance of the plugin.
@@ -57,19 +61,18 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
 
 
         }
+   
 
-
-
-        $style_attributes = array(
-            'rel'   => 'stylesheet',
-            'href'  => $GLOBALS['CANONICAL_RELATIVE_PATH_STUDIP'] . $this->getPluginPath() . '/stylesheets/oc.css');
-        PageLayout::addHeadElement('link',  array_merge($style_attributes, array()));
-
-
-        $script_attributes = array(
-            'src'   => $GLOBALS['CANONICAL_RELATIVE_PATH_STUDIP'] . $this->getPluginPath() . '/javascripts/application.js');
-        PageLayout::addHeadElement('script', $script_attributes, '');
-  
+        PageLayout::addStylesheet($this->getpluginUrl() . '/stylesheets/oc.css');
+        PageLayout::addScript($this->getPluginUrl() . '/javascripts/application.js');
+        
+        if($perm->have_perm('dozent')){
+            PageLayout::addScript($this->getPluginUrl() . '/javascripts/embed.js');
+            PageLayout::addStylesheet($this->getpluginUrl() . '/stylesheets/embed.css'); 
+        }
+        
+        StudipFormat::addStudipMarkup('opencast', '\[opencast\]', '\[\/opencast\]', 'OpenCast::markupOpencast');
+     
     }
 
     /**
@@ -84,13 +87,8 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
                                             rtrim(PluginEngine::getURL($this, null, ''), '/'),
                                             null);
 
-
         $dispatcher->plugin = $this;
-
         $dispatcher->dispatch($unconsumed_path);
-
-
-
     }
 
     /**
@@ -192,9 +190,10 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
             $series_metadata = OCSeriesModel::getConnectedSeriesDB($course_id);
             if($series_metadata[0]['schedule'] == '1'){
                 $main->addSubNavigation('scheduler', $scheduler);
+                //$main->addSubNavigation('upload', $upload);
+                
             }
             $main->addSubNavigation('config', $admin);
-            // $main->addSubNavigation('upload', $upload);
 
         }
 
@@ -215,4 +214,100 @@ class OpenCast extends StudipPlugin implements SystemPlugin, StandardPlugin
     {
         return false;
     }
+    
+    static function markupOpencast  ($markup, $matches, $contents)
+    {
+        $search_client = SearchClient::getInstance();
+        $engage_url =  parse_url($search_client->getBaseURL());
+        $host = $engage_url['host'];
+        $embed =  $host ."/engage/ui/embed.html?id=".$contents;
+        
+   	    return sprintf('<iframe src="https://%s" style="border:0px #FFFFFF none;" name="Opencast Matterhorn - Media Player" scrolling="no" frameborder="0" marginheight="0px" marginwidth="0px" width="540" height="404"></iframe><br>', $embed);
+    }
+    
+    public function describeRoutes()
+    {
+        return array('/courses/:course_id/oc_episodes' => _('Opencast Matterhorn Aufzeichnungen einer Veranstaltung.'), );
+    }
+
+    public function routes(&$router)
+    {
+
+        $router->get('/courses/:course_id/oc_episodes', function($course_id) use ($router){
+            
+            try {
+                $search_client = SearchClient::getInstance();
+                if (($cseries = OCSeriesModel::getConnectedSeries($course_id))) {
+
+                    foreach($cseries as $serie) {
+                        $series = $search_client->getEpisodes($serie['identifier']);
+                        if(!empty($series)) {
+                            foreach($series as $episode) {
+                                $visibility = OCModel::getVisibilityForEpisode($course_id, $episode->id);
+
+                                if(is_object($episode->mediapackage) && $visibility['visible']!= 'false' ){
+                                    $count+=1;
+                                    $ids[] = $episode->id;
+                                  
+                                    foreach($episode->mediapackage->attachments->attachment as $attachment) {
+                                        if($attachment->type === 'presenter/search+preview') $preview = $attachment->url;
+                                    }
+                                    
+                                    foreach($episode->mediapackage->media->track as $track) {
+                                        if(($track->type === 'presenter/delivery') && ($track->mimetype === 'video/mp4')){
+                                            $url = parse_url($track->url);
+                                            if(in_array('high-quality', $track->tags->tag) && $url['scheme'] != 'rtmp') {
+                                               $presenter_download = $track->url;
+                                            }
+                                        }
+                                        if(($track->type === 'presentation/delivery') && ($track->mimetype === 'video/mp4')){
+                                            $url = parse_url($track->url);
+                                            if(in_array('high-quality', $track->tags->tag) && $url['scheme'] != 'rtmp') {
+                                               $presentation_download = $track->url;
+                                            }
+                                        }
+                                        if(($track->type === 'presenter/delivery') && ($track->mimetype === 'audio/mp3'))
+                                            $audio_download = $track->url;
+                                            $engage_url =  parse_url($audio_download);
+                                            $external_player_url = $engage_url['scheme']. '://' . $engage_url['host'] .    
+                                            "/engage/ui/watch.html?id=".$episode->id;
+                                    }
+                                    
+                                    $oc_episodes[$episode->id] = array('id' => $episode->id,
+                                        'title' => $episode->dcTitle,
+                                        'start' => $episode->mediapackage->start,
+                                        'duration' => $episode->mediapackage->duration,
+                                        'description' => $episode->dcDescription,
+                                        'author' => $episode->dcCreator,
+                                        'preview' => $preview,
+                                        'external_player_url' => $external_player_url,
+                                        'presenter_download' => $presenter_download,
+                                        'presentation_download' => $presentation_download,
+                                        'audio_download' => $audio_download
+                                    );
+                                }
+                            }
+                        }
+                    }   
+                }
+            } catch (Exception $e) {
+                die($e->getMessage());
+            }
+            if(empty($oc_episodes)){
+                $router->halt(404, sprintf('Episodes for Course %s not found', $course_id));
+            } else {
+                header('Cache-Control: private');
+                $router->expires('+360 minutes');
+                $router->etag(md5(serialize($oc_episodes)));
+                $router->render(compact('oc_episodes'));
+            }
+        })->conditions(array('course_id' => '|[a-f0-9]{32}|course'));;
+    
+    }
+}
+
+if (interface_exists('APIPlugin')) {
+    class Opencast extends OpenCastBase implements APIPlugin {}
+} else {
+    class OpenCast extends OpenCastBase {}
 }
