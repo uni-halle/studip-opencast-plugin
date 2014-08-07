@@ -39,7 +39,7 @@ class OCModel
     static function getOCRessources() {
        $stmt = DBManager::get()->prepare("SELECT * FROM resources_objects ro
                 LEFT JOIN resources_objects_properties rop ON (ro.resource_id = rop.resource_id)
-                WHERE rop.property_id IN (SELECT property_id FROM resources_properties WHERE name = 'Opencast Capture Agent' )
+                WHERE rop.property_id IN (SELECT property_id FROM resources_properties WHERE name = 'System zur automatischen Vorlesungsaufzeichnung' )
                 AND rop.state = 'on'");
 
        $stmt->execute();
@@ -51,7 +51,7 @@ class OCModel
        $stmt = DBManager::get()->prepare("SELECT * FROM resources_objects ro
                 LEFT JOIN resources_objects_properties rop ON (ro.resource_id = rop.resource_id)
                 LEFT JOIN oc_resources ocr ON (ro.resource_id = ocr.resource_id)
-                WHERE rop.property_id = (SELECT property_id FROM resources_properties WHERE name = 'Opencast Capture Agent' )
+                WHERE rop.property_id = (SELECT property_id FROM resources_properties WHERE name = 'System zur automatischen Vorlesungsaufzeichnung' )
                 AND rop.state = 'on'");
 
        $stmt->execute();
