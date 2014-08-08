@@ -27,7 +27,7 @@ class InitOcplugin extends Migration {
 
         DBManager::get()->query("INSERT INTO `resources_properties`
                 (`property_id`, `name`, `description`, `type`, `options`, `system`)
-                VALUES (MD5('".uniqid()."'), 'System zur automatischen Vorlesungsaufzeichnung', '', 'bool', 'vorhanden', 0)");
+                VALUES (MD5('".uniqid()."'), 'automatische Vorlesungsaufzeichnung', '', 'bool', 'vorhanden', 0)");
 
         
         DBManager::get()->query("CREATE TABLE IF NOT EXISTS `oc_seminar_episodes` (
@@ -65,8 +65,8 @@ class InitOcplugin extends Migration {
     function down() {
         DBManager::get()->query("DROP TABLE IF EXISTS `oc_series`,`oc_config`,`oc_endpoints`, `oc_seminar_series`, `oc_resources`, `oc_seminar_episodes`, `oc_scheduled_recordings`;");
         DBManager::get()->query("DELETE FROM  resources_objects_properties 
-        WHERE property_id IN(SELECT property_id FROM resources_properties WHERE name = 'System zur automatischen Vorlesungsaufzeichnung' );");
-        DBManager::get()->query("DELETE FROM resources_properties WHERE name = 'System zur automatischen Vorlesungsaufzeichnung';");
+        WHERE property_id IN(SELECT property_id FROM resources_properties WHERE name = 'automatische Vorlesungsaufzeichnung' );");
+        DBManager::get()->query("DELETE FROM resources_properties WHERE name = 'automatische Vorlesungsaufzeichnung';");
     }
     
 }
