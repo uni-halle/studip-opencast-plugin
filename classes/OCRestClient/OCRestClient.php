@@ -66,10 +66,14 @@
                 $stmt = DBManager::get()->prepare("SELECT * FROM `oc_endpoints` WHERE service_type = ?");
                 $stmt->execute(array($service_type));
                 $config = $stmt->fetch(PDO::FETCH_ASSOC);
+                if($config) {
                 $stmt = DBManager::get()->prepare("SELECT `service_user`, `service_password`  FROM `oc_config` WHERE 1");
                 $stmt->execute();
                 $config = $config + $stmt->fetch(PDO::FETCH_ASSOC);
                 return $config;
+                } else {
+                    throw new Exception(sprintf(_("Es sinde keine Konfigurationsdaten für den Servicetyp **%s** vorhanden."), $service_type));
+                }
                 
             } else {
                 throw new Exception(_("Es wurde kein Servicetyp angegeben."));
@@ -120,7 +124,6 @@
                 $response = curl_exec($this->ochandler);
                 $httpCode = curl_getinfo($this->ochandler, CURLINFO_HTTP_CODE);
 
-				
                 if($with_res_code) {
                     return array(json_decode($response), $httpCode);
                 } else {
@@ -135,6 +138,7 @@
             }
 
         }
+        
         /**
          * function getJSON - performs a REST-Call and retrieves response in JSON
          */

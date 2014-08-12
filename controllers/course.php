@@ -10,7 +10,6 @@
  */
 
 require_once 'app/controllers/studip_controller.php';
-//require_once $this->trails_root.'/models/OCRestClient.php';
 require_once $this->trails_root.'/classes/OCRestClient/SearchClient.php';
 require_once $this->trails_root.'/classes/OCRestClient/SeriesClient.php';
 require_once $this->trails_root.'/classes/OCRestClient/SchedulerClient.php';
@@ -141,7 +140,7 @@ class CourseController extends StudipController
             }
             if($active_id) {
                 $this->active_id = $active_id;
-            } else {
+            } else if(isset($this->episode_ids)){
                 $x = $this->episode_ids;
                 $first = array_shift($x);
                 $this->active_id = $first['id'];
@@ -150,10 +149,8 @@ class CourseController extends StudipController
 
             if($count > 0) {
                 $engage_url =  parse_url($this->search_client->getBaseURL());
-                $host = $engage_url['host'];
-                $this->embed =  $host ."/engage/ui/embed.html?id=".$this->active_id;
-                $this->engage_player_url = $host ."/engage/ui/watch.html?id=".$this->active_id;
-
+                $this->embed =  $this->search_client->getBaseURL() ."/engage/ui/embed.html?id=".$this->active_id;
+                $this->engage_player_url = $this->search_client->getBaseURL() ."/engage/ui/watch.html?id=".$this->active_id;
             }
         } catch (Exception $e) {
             $this->flash['error'] = $e->getMessage();
@@ -298,16 +295,18 @@ class CourseController extends StudipController
     function update_action($resource_id, $termin_id)
     {
 
-        $this->course_id = Request::get('cid');
+        $course_id = Request::get('cid');
+        $scheduler_client = SchedulerClient::getInstance();
+        $scheduled = OCModel::checkScheduledRecording($course_id, $resource_id, $termin_id);
 
-        if( $this->scheduler_client->updateEventForSeminar($this->course_id, $resource_id, $termin_id)) {
+        if( $scheduler_client->updateEventForSeminar($course_id, $resource_id, $termin_id, $scheduled['event_id'])) {
             $this->flash['message'] = _("Die geplante Aufzeichnung aktualisiert");
         } else {
             $this->flash['error'] = _("Die geplante Aufzeichnung konnte nicht aktualisiert werden.");
         }
 
 
-        $this->redirect(PluginEngine::getLink('opencast/course/config'));
+        $this->redirect(PluginEngine::getLink('opencast/course/scheduler'));
     }
 
 
@@ -342,10 +341,11 @@ class CourseController extends StudipController
 
     function upload_action()
     {
+        //TODO this should only work iff an series is connected!
         $this->date = date('Y-m-d');
         $this->hour = date('H');
         $this->minute = date('i');
-        
+       
         $scripts = array(
             '/vendor/jquery.fileupload.js',
             '/vendor/jquery.ui.widget.js'
@@ -365,8 +365,6 @@ class CourseController extends StudipController
                 PageLayout::addHeadElement('script', $script_attributes, '');
             }
 
-
-
             //TODO: gibt es keine generische Funktion dafür?
             $this->rel_canonical_path = $GLOBALS['CANONICAL_RELATIVE_PATH_STUDIP'] . 'plugins_packages/elan-ev/OpenCast';
         } catch (Exception $e) {
@@ -376,38 +374,6 @@ class CourseController extends StudipController
     }
 
 
-    function ingest_action()
-    {
-        global $UPLOAD_PATH;
-
-
-
-        //check if an suitable upload dir exits
-        if(!chdir( getcwd() .'/assets/opencast-uploads')) {
-            mkdir($UPLOAD_PATH.  '/opencastupload');
-            symlink($UPLOAD_PATH.  '/opencastupload', getcwd() .'/assets/opencast-uploads');
-        } else {
-            $target_path = $UPLOAD_PATH .'/opencastupload/'. basename( $_FILES['video']['name']);
-
-            if(move_uploaded_file($_FILES['video']['tmp_name'], $target_path)) {
-                // Passende message
-                $this->flash['message'] = _("Das Video ");
-                $video_uri = $GLOBALS['ABSOLUTE_URI_STUDIP'].'assets/opencast-uploads/'. $_FILES['video']['name'];
-
-                //echo "The file ".  basename( $_FILES['video']['name']).
-                    " has been uploaded";
-                //echo "<img src='". $GLOBALS['ABSOLUTE_URI_STUDIP'].'assets/opencast-uploads/'. $_FILES['video']['name']."'>";
-            } else{
-                //pasende message
-                //echo "There was an error uploading the file, please try again!";
-            }
-        }
-
-
-
-        $this->redirect(PluginEngine::getLink('opencast/course/upload'));
-
-    }
     
     function bulkschedule_action()
     {

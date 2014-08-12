@@ -38,9 +38,10 @@ class UploadController extends StudipController
             if($this->file->isNew()) {
                 $this->initNewUpload();
             }
+
             if($this->file->getMediaPackage() && $this->file->getJobID()) {
                 //Step 2.2 Upload all chunks
-                $this->uploadChunk();
+                $x = $this->uploadChunk();
             } else {
                 $this->error[] = _('Fehler beim erstellen der Job ID oder des '
                         .'Media Packages');
@@ -79,7 +80,7 @@ class UploadController extends StudipController
         if($content = $this->ingest->ingest($this->file->getMediaPackage()))
         {
             $this->file->clearSession();
-            echo 'Ingest Started: '.htmlentities($content);
+            //echo 'Ingest Started: '.htmlentities($content);
         } else echo 'upload failed';
         
     }
@@ -119,6 +120,7 @@ class UploadController extends StudipController
     }
     private function addSeriesDC() {
         $seriesDCs = OCSeriesModel::getSeriesDCs($_SESSION['SessionSeminar']);
+        if(is_array($seriesDCs)){
         foreach($seriesDCs as $dc) 
         {
             $newMediaPackage = '';
@@ -132,6 +134,7 @@ class UploadController extends StudipController
                 $this->error[] = 'Fehler beim hinzufügen einer Series, '.$dc;
                 return false;
             }
+        }
         }
         return true;
     }
@@ -169,8 +172,8 @@ class UploadController extends StudipController
       
         $res = $this->upload->uploadChunk($this->file->getJobID(),
                 $this->file->getChunk(),
-                '@'.$this->file->getChunkPath());
-        switch($res[1]) {
+                $this->file->getChunkPath());
+        switch($res[0]) {
             case 200: 
                 $this->file->setChunkStatus('mh');
                 break;
