@@ -66,18 +66,19 @@
             <? $resource = $date->getResourceID(); ?>
             <? if(isset($resource) && OCModel::checkResource($resource)) :?>
             <? if(OCModel::checkScheduled($course_id, $resource, $date->termin_id)) :?>
-                <?= LinkButton::create(_('Aufzeichnung löschen'), PluginEngine::getLink('opencast/course/unschedule/'.$resource .'/'. $date->termin_id ),array('title' => _("Aufzeichnung ist bereits geplant. Klicken Sie hier um die Planung zu aufzuheben"))); ?>
+                <?= LinkButton::create(_('Aufzeichnung aktualisieren'), PluginEngine::getLink('opencast/course/update/'.$resource .'/'. $date->termin_id ),array('title' => _("Aufzeichnung ist bereits geplant. Klicken Sie hier um die Planung zu aufzuheben"), 'class' => 'ocupdate ocspecial')); ?>
+                <?= LinkButton::create(_('Aufzeichnung stornieren'), PluginEngine::getLink('opencast/course/unschedule/'.$resource .'/'. $date->termin_id ),array('title' => _("Aufzeichnung ist bereits geplant. Sie können die Aufzeichnung stornieren oder entsprechende Metadaten aktualisieren."), 'class' => 'ocunschedule ocspecial')); ?>
                 <?  else : ?>
                     <? if(date($d['date']) > time()) :?>
-                         <?= LinkButton::create(_('Aufzeichnung planen'), PluginEngine::getLink('opencast/course/schedule/'.$resource .'/'. $date->termin_id )); ?>
+                         <?= LinkButton::create(_('Aufzeichnung planen'), PluginEngine::getLink('opencast/course/schedule/'.$resource .'/'. $date->termin_id ), array('class' => 'ocschedule ocspecial')); ?>
                     <? else :?>
-                        <?= Button::create(_("Planung nicht möglich "), array('disabled' => true, 'title' =>  _("Dieses Datum liegt in der Vergangenheit. Sie können keine Aufzeichnung planen.")));?>
+                        <?= Button::create(_("Planung nicht möglich "), array('disabled' => true, 'title' =>  _("Dieses Datum liegt in der Vergangenheit. Sie können keine Aufzeichnung planen."),'class' => 'ocschedule ocspecial'));?>
                     <? endif;?>
                 <? endif; ?>
             <? elseif(false) : ?>
             <?= Assets::img('icons/16/blue/video.png') ?>
             <? else : ?>
-            <?= Button::create(_("Planung nicht möglich "), array('disabled' => true, 'title' =>  _("Es wurde bislang kein Raum mit Aufzeichnungstechnik gebucht")));?>
+            <?= Button::create(_("Planung nicht möglich"), array('disabled' => true, 'title' =>  _("Es wurde bislang kein Raum mit Aufzeichnungstechnik gebucht")));?>
             <? endif; ?>
         </td>
     </tr>
@@ -90,7 +91,7 @@
                 <option value="" disabled selected><?=_("Bitte wählen Sie eine Aktion.")?></option>
                 <option value="create"><?=_("Aufzeichnungen planen")?></option>
                 <option value="update"><?=_("Aufzeichnungen aktualisieren")?></option>
-                <option value="delete"><?=_("Aufzeichnungen löschen")?></option>
+                <option value="delete"><?=_("Aufzeichnungen stornieren")?></option>
             </select>
         </td>
         <td></td>

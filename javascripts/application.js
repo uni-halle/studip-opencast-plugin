@@ -33,9 +33,10 @@ OC = {
             });
         });
 
-    }/*,
+    },
     
     initUpload : function(maxChunk){
+        console.log(maxChunk);
         jQuery(document).ready(function(){
             $('#btn_accept').click(function() {
                 OC.formData.submit();
@@ -62,7 +63,7 @@ OC = {
                 submit: function (e, data) {
                     $( "#progressbar" ).progressbar({
                         value: 0
-                    });
+                    }).addClass('oc_mediaupload_progressbar');
                 },
                 progressall: function(e, data) {
                     var progress = parseInt(data.loaded / data.total * 100, 10);
@@ -70,7 +71,7 @@ OC = {
                 },
                 done: function(e, data) {
                     $( "#progressbar" ).progressbar('destroy');
-                    $('#video_upload').val('');
+                    $('#video_upload').val('').removeClass('oc_mediaupload_progressbar');
                 }
             });
             $('#recordDate').datepicker({
@@ -92,6 +93,6 @@ OC = {
             return inp_kb + 'KB';
         }
         return input + 'Bytes'
-    } */
+    }
 };
 
